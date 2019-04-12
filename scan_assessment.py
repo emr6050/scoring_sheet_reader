@@ -25,13 +25,12 @@ answers = {}
 
 def score_assessment_form(file_string):
     global questionOffset, subtotal, answers
-    
     file_img = cv2.imread(file_string)
 
     # restrict the contour detection to a scoring_region
     (rows, columns) = file_img.shape[:2]
-    widthThreshold = int(columns*0)
-    heightThreshold = int(rows*0)
+    widthThreshold = int(columns*0.7)
+    heightThreshold = int(rows*0.25)
     region = file_img[heightThreshold:rows, widthThreshold:columns]
 
     # scale, gray, and threshold the image
@@ -56,27 +55,17 @@ def score_assessment_form(file_string):
         questionCnts, method="top-to-bottom")[0]
 
     for (q, i) in enumerate(np.arange(0, len(questionCnts), NUM_ANSWER_OPTIONS)):
-        # sort the contours for the current question from left to right,
-        # then initialize the index of the bubbled answer
         cnts = contours.sort_contours(
             questionCnts[i:i + NUM_ANSWER_OPTIONS])[0]
         bubbled = (0, 0)
 
         for (j, c) in enumerate(cnts):
-            # construct a mask that reveals only the current
-            # "bubble" for the question
             mask = np.zeros(thresh.shape, dtype="uint8")
             cv2.drawContours(mask, [c], -1, 255, -1)
 
-            # apply the mask to the scoring region, then
-            # count the number of non-zero pixels in the
-            # bubble area
             mask = cv2.bitwise_and(thresh, thresh, mask=mask)
             total = cv2.countNonZero(mask)
 
-            # if the current total has a larger number of total
-            # non-zero pixels, then we are examining the currently
-            # bubbled-in answer
             if bubbled == (0, 0) or total > bubbled[0]:
                 bubbled = (total, j)
 
@@ -86,7 +75,7 @@ def score_assessment_form(file_string):
 
     questionOffset = q
 
-    # draw thresholds for scoring region
+    # draw thresholds for scoring region on the full page
     cv2.line(file_img, (0, heightThreshold),
              (columns, heightThreshold), BLUE, 2)
     cv2.line(file_img, (widthThreshold, 0),
@@ -99,7 +88,7 @@ def score_assessment_form(file_string):
     cv2.waitKey(1)
 
 
-score_assessment_form('scoringRegion_filled')
+score_assessment_form('special/pg2_filled.PNG')
 
 print(subtotal)
 
