@@ -4,6 +4,7 @@
 # TODO: programmatically find scoring region (currently there's a preset threshold)
 # TODO: loop over all pages of a pdf document (currently the program has to be adjusted for number of images)
 # TODO: check that question without an answer does not mess up the program
+# TODO: check if contour has more pixels than should be possible
 
 from imutils.perspective import four_point_transform
 from imutils import contours
@@ -23,14 +24,14 @@ questionOffset = 0  # useful for multi-page questionaire
 answers = {}
 
 
-def score_assessment_form(file_string):
+def score_assessment_form(file_string, wThresh, hThresh):
     global questionOffset, subtotal, answers
     file_img = cv2.imread(file_string)
 
     # restrict the contour detection to a scoring_region
     (rows, columns) = file_img.shape[:2]
-    widthThreshold = int(columns*0.7)
-    heightThreshold = int(rows*0.25)
+    widthThreshold = int(columns*wThresh)
+    heightThreshold = int(rows*hThresh)
     region = file_img[heightThreshold:rows, widthThreshold:columns]
 
     # scale, gray, and threshold the image
@@ -73,7 +74,7 @@ def score_assessment_form(file_string):
         cv2.drawContours(scoring_region, [cnts[bubbled[1]]], -1, RED, 3)
         subtotal += (bubbled[1]+1)
 
-    questionOffset = q
+    questionOffset = q+1
 
     # draw thresholds for scoring region on the full page
     cv2.line(file_img, (0, heightThreshold),
@@ -88,7 +89,8 @@ def score_assessment_form(file_string):
     cv2.waitKey(1)
 
 
-score_assessment_form('special/pg2_filled.PNG')
+score_assessment_form('special/pg2_filled.PNG', 0.7, 0.25)
+score_assessment_form('special/pg3_filled.PNG', 0.7, 0.0)
 
 print(subtotal)
 
