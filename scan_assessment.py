@@ -10,6 +10,7 @@ import numpy as np
 import argparse
 import imutils
 import cv2
+import fhir.resources
 
 # constants
 RED = (0, 0, 255)
@@ -91,5 +92,8 @@ score_assessment_form('special/pg2_filled.PNG', wThresh: 0.7, 0.25)
 score_assessment_form('special/pg3_filled.PNG', 0.7, 0.0)
 
 print(subtotal)
+
+# creating FHIR resource for patient record
+
 
 print("--finished--")
