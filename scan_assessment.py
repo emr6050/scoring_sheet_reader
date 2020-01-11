@@ -1,10 +1,8 @@
 # Optical Mark Recognition (OMR) for reading the assessment scoring forms
 # created by: Peter Dobbs
 # based on: https://www.pyimagesearch.com/2016/10/03/bubble-sheet-multiple-choice-scanner-and-test-grader-using-omr-python-and-opencv/
-# TODO: programmatically find scoring region (currently there's a preset threshold)
-# TODO: loop over all pages of a pdf document (currently the program has to be adjusted for number of images)
 # TODO: check that question without an answer does not mess up the program
-# TODO: check if contour has more pixels than should be possible
+# TODO: check if contour has more pixels than should be possible <- what?
 
 from imutils.perspective import four_point_transform
 from imutils import contours
