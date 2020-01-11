@@ -89,7 +89,7 @@ def score_assessment_form(file_string, wThresh, hThresh):
     cv2.waitKey(1)
 
 
-score_assessment_form('special/pg2_filled.PNG', 0.7, 0.25)
+score_assessment_form('special/pg2_filled.PNG', wThresh: 0.7, 0.25)
 score_assessment_form('special/pg3_filled.PNG', 0.7, 0.0)
 
 print(subtotal)
