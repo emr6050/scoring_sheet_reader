@@ -94,6 +94,8 @@ score_assessment_form('special/pg3_filled.PNG', 0.7, 0.0)
 print(subtotal)
 
 # creating FHIR resource for patient record
+org = new fhir.resources
+
 
 
 print("--finished--")
