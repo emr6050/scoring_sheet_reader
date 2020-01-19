@@ -9,7 +9,7 @@ RED = (0, 0, 255)
 BLUE = (255, 0, 0)
 GREEN = (0, 255, 0)
 
-# pdf_file = "special/srs-p-filled.pdf"
+# pdf_file = "special/assessment-filled.pdf"
 # pages = convert_from_path(pdf_file)
 # count = 1
 
@@ -19,7 +19,7 @@ GREEN = (0, 255, 0)
 #     count = count+1
 
 # read in image
-page_file = 'special/temp/page_2-filled.png'
+page_file = 'images/pg2-filled.png'
 file_img = cv2.imread(page_file)
 wThresh = 0.7
 hThresh = 0.0
@@ -53,7 +53,7 @@ for i in circles[0, :]:
 
 cv2.imshow('detected circles', cv2.resize(
     region, None, fx=.45, fy=.45))
-cv2.imwrite('pg_2-detected_circles-filled.png', region)
+# cv2.imwrite('images/pg2-filled-detected.png', region)
 cv2.waitKey(0)
 
 # # find contours
