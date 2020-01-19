@@ -2,7 +2,8 @@
 # created by: Peter Dobbs
 # based on: https://www.pyimagesearch.com/2016/10/03/bubble-sheet-multiple-choice-scanner-and-test-grader-using-omr-python-and-opencv/
 # TODO: check that question without an answer does not mess up the program
-# TODO: check if contour has more pixels than should be possible <- what?
+# TODO: check if contour has more pixels than should be possible
+#           <- if the detected object is just too big to be one of the bubble answers
 
 from imutils.perspective import four_point_transform
 from imutils import contours
@@ -10,7 +11,7 @@ import numpy as np
 import argparse
 import imutils
 import cv2
-import fhir.resources
+from pdf2image import convert_from_path
 
 # constants
 RED = (0, 0, 255)
@@ -36,23 +37,34 @@ def score_assessment_form(file_string, wThresh, hThresh):
     # scale, gray, and threshold the image
     scoring_region = cv2.resize(region, None, fx=3, fy=3)
     gray = cv2.cvtColor(scoring_region, cv2.COLOR_BGR2GRAY)
-    thresh = cv2.threshold(
+    bwImage = cv2.threshold(
         gray, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+    cv2.imshow('black and white image', cv2.resize(
+        bwImage, None, fx=.15, fy=.15))
+    cv2.waitKey(0)
 
+    # detect scoring boxes (bubbles in this case)
     # find contours
-    cnts = cv2.findContours(thresh, cv2.RETR_EXTERNAL,
-                            cv2.CHAIN_APPROX_SIMPLE)
-    cnts = imutils.grab_contours(cnts)
-    questionCnts = []
+    # -- this isn't exclusive enough -- It's picking up letters like 'M' and 'O'
+    cnts, hierarchy = cv2.findContours(bwImage, cv2.RETR_EXTERNAL,
+                                       cv2.CHAIN_APPROX_SIMPLE)
+    print("Number of detected contours:", len(cnts))
 
+    questionCnts = []
     for c in cnts:
         (x, y, w, h) = cv2.boundingRect(c)
         aspect_ratio = w / float(h)
-        if w >= 20 and h >= 20 and aspect_ratio >= 0.9 and aspect_ratio <= 1.1:
+        if w >= 50 and h >= 50 and aspect_ratio >= 0.95 and aspect_ratio <= 1.05:
             questionCnts.append(c)
-
     questionCnts = contours.sort_contours(
         questionCnts, method="top-to-bottom")[0]
+    print("Number of question-related contours:", len(questionCnts))
+
+    cv2.drawContours(scoring_region, questionCnts, -1, BLUE, 6)
+    cv2.imshow('black and white with overlayed contours', cv2.resize(
+        scoring_region, None, fx=.15, fy=.15))
+    # cv2.imwrite('detected_contours.png', scoring_region)
+    cv2.waitKey(0)
 
     for (q, i) in enumerate(np.arange(0, len(questionCnts), NUM_ANSWER_OPTIONS)):
         cnts = contours.sort_contours(
@@ -60,42 +72,48 @@ def score_assessment_form(file_string, wThresh, hThresh):
         bubbled = (0, 0)
 
         for (j, c) in enumerate(cnts):
-            mask = np.zeros(thresh.shape, dtype="uint8")
+            mask = np.zeros(bwImage.shape, dtype="uint8")
             cv2.drawContours(mask, [c], -1, 255, -1)
 
-            mask = cv2.bitwise_and(thresh, thresh, mask=mask)
+            mask = cv2.bitwise_and(bwImage, bwImage, mask=mask)
             total = cv2.countNonZero(mask)
 
             if bubbled == (0, 0) or total > bubbled[0]:
                 bubbled = (total, j)
 
         answers[questionOffset+q+1] = (bubbled[1]+1)
-        cv2.drawContours(scoring_region, [cnts[bubbled[1]]], -1, RED, 3)
+        cv2.drawContours(scoring_region, [cnts[bubbled[1]]], -1, RED, 5)
         subtotal += (bubbled[1]+1)
 
     questionOffset = q+1
 
-    # draw thresholds for scoring region on the full page
-    cv2.line(file_img, (0, heightThreshold),
-             (columns, heightThreshold), BLUE, 2)
-    cv2.line(file_img, (widthThreshold, 0),
-             (widthThreshold, rows), BLUE, 2)
-    # show original image and scoring chart to check for errors
-    cv2.imshow("Drawing Region on Original Page", cv2.resize(
-        file_img, None, fx=0.75, fy=0.75))
     cv2.imshow("Scoring region", cv2.resize(
-        scoring_region, None, fx=0.333, fy=0.333))
-    cv2.waitKey(1)
+        scoring_region, None, fx=0.15, fy=0.15))
+    # cv2.imwrite('detected_contours_scored.png', scoring_region)
+    cv2.waitKey(0)
 
 
-score_assessment_form('special/pg2_filled.PNG', wThresh: 0.7, 0.25)
-score_assessment_form('special/pg3_filled.PNG', 0.7, 0.0)
+print("--start--")
 
-print(subtotal)
+# pdf_file = "special/SRS-P.pdf"
+# pages = convert_from_path(pdf_file)
+# count = 0
+
+# for page in pages:
+#     page_file = "special/temp/page_"+str(count)+".png"
+#     page.save(page_file, "PNG")
+#     count = count+1
+
+# for page_num in range(count):
+#     page_file = "special/temp/page_"+str(page_num)+".png"
+#     score_assessment_form(page_file, wThresh=0.7, hThresh=0.0)
+
+score_assessment_form("special/temp/page_1.png", wThresh=0.7, hThresh=0.0)
+
+print("Raw Score:", subtotal)
 
 # creating FHIR resource for patient record
-org = new fhir.resources
+# org = new Organization()
 
 
-
-print("--finished--")
+print("--finish--")
