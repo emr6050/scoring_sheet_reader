@@ -3,13 +3,23 @@ import imutils
 from imutils.perspective import four_point_transform
 from imutils import contours
 import cv2
+from pdf2image import convert_from_path
 
 RED = (0, 0, 255)
 BLUE = (255, 0, 0)
 GREEN = (0, 255, 0)
 
+# pdf_file = "special/srs-p-filled.pdf"
+# pages = convert_from_path(pdf_file)
+# count = 1
+
+# for page in pages:
+#     page_file = "special/temp/page_"+str(count)+"-filled.png"
+#     page.save(page_file, "PNG")
+#     count = count+1
+
 # read in image
-page_file = 'special/temp/page_1.png'
+page_file = 'special/temp/page_2-filled.png'
 file_img = cv2.imread(page_file)
 wThresh = 0.7
 hThresh = 0.0
@@ -32,7 +42,7 @@ bwImg = cv2.threshold(
 # Hough Transform to detect circles
 circles = cv2.HoughCircles(bwImg, cv2.HOUGH_GRADIENT, dp=1,
                            minDist=30, param1=5, param2=15,
-                           minRadius=10, maxRadius=20)
+                           minRadius=11, maxRadius=19)
 circles = np.uint16(np.around(circles))
 print("number of detected circles:", len(circles[0, :]))
 for i in circles[0, :]:
@@ -42,8 +52,8 @@ for i in circles[0, :]:
     # cv2.circle(region, (i[0], i[1]), 2, RED, 3)
 
 cv2.imshow('detected circles', cv2.resize(
-    region, None, fx=.5, fy=.5))
-cv2.imwrite('detected_circles.png', region)
+    region, None, fx=.45, fy=.45))
+cv2.imwrite('pg_2-detected_circles-filled.png', region)
 cv2.waitKey(0)
 
 # # find contours
