@@ -53,9 +53,7 @@ def score_assessment_form(file_string, wThresh, hThresh):
     for c in cnts:
         (x, y, w, h) = cv2.boundingRect(c)
         aspect_ratio = w / float(h)
-        if (aspect_ratio < 0.95) | (aspect_ratio > 1.05):
-            print("weird aspect ratio, w={} and h={}".format(w, h))
-        if w >= 30 and h >= 30:  # and aspect_ratio >= 0.95 and aspect_ratio <= 1.05:
+        if w >= 30 and h >= 30 and aspect_ratio >= 0.80 and aspect_ratio <= 1.1:
             questionCnts.append(c)
 
     questionCnts = contours.sort_contours(
