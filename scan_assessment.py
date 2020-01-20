@@ -65,24 +65,35 @@ def score_assessment_form(file_string, wThresh, hThresh):
     # cv2.imwrite('detected_contours.png', scoring_region)
     # cv2.waitKey(0)
 
-    for (q, i) in enumerate(np.arange(0, len(questionCnts), NUM_ANSWER_OPTIONS)):
+    # arrange questions into groups
+    questionGroups = np.arange(0, len(questionCnts), NUM_ANSWER_OPTIONS)
+
+    # loop through answer groups
+    for (q, i) in enumerate(questionGroups):
+        bubbled = (0, 0)
+        
+        # order the answer group from left-to-right
         cnts = contours.sort_contours(
             questionCnts[i:i + NUM_ANSWER_OPTIONS])[0]
-        bubbled = (0, 0)
 
+        # find filled-in bubble
         for (j, c) in enumerate(cnts):
             mask = np.zeros(bwImage.shape, dtype="uint8")
             cv2.drawContours(mask, [c], -1, 255, -1)
 
             mask = cv2.bitwise_and(bwImage, bwImage, mask=mask)
             total = cv2.countNonZero(mask)
+            print('nonzero values in {} = {}'.format(j, total))
 
             if bubbled == (0, 0) or total > bubbled[0]:
                 bubbled = (total, j)
 
-        answers[questionOffset+q+1] = (bubbled[1]+1)
-        cv2.drawContours(region, [cnts[bubbled[1]]], -1, RED, 5)
-        subtotal += (bubbled[1]+1)
+        if(bubbled[0] > 600):   # threshold for `filled-in bubble`
+            answers[questionOffset+q+1] = (bubbled[1]+1)
+            cv2.drawContours(region, [cnts[bubbled[1]]], -1, RED, 5)
+            subtotal += (bubbled[1]+1)
+        else:
+            answers[questionOffset+q+1] = None
 
     questionOffset = q+1
 
@@ -107,7 +118,7 @@ print("--start--")
 #     score_assessment_form(page_file, wThresh=0.7, hThresh=0.0)
 
 
-page_file = 'special/temp/page_1-filled.png'  # 'images/pg1-blank.PNG'
+page_file = 'special/temp/page_2-filled.png'  # 'images/pg1-blank.PNG'
 wThresh = 0.0  # 0.7
 hThresh = 0.0
 score_assessment_form(page_file, wThresh=0.0, hThresh=0.0)
