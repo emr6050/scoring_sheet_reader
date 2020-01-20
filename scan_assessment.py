@@ -35,17 +35,16 @@ def score_assessment_form(file_string, wThresh, hThresh):
     region = file_img[heightThreshold:rows, widthThreshold:columns]
 
     # scale, gray, and threshold the image
-    scoring_region = cv2.resize(region, None, fx=3, fy=3)
-    gray = cv2.cvtColor(scoring_region, cv2.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(region, cv2.COLOR_BGR2GRAY)
     bwImage = cv2.threshold(
         gray, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
-    cv2.imshow('black and white image', cv2.resize(
-        bwImage, None, fx=.15, fy=.15))
-    cv2.waitKey(0)
+    cv2.imshow('black and white image', bwImage)
+    # cv2.waitKey(0)
 
     # detect scoring boxes (bubbles in this case)
     # find contours
     # -- this isn't exclusive enough -- It's picking up letters like 'M' and 'O'
+    # -- this also really sucks on bubbles filled by hand
     cnts, hierarchy = cv2.findContours(bwImage, cv2.RETR_EXTERNAL,
                                        cv2.CHAIN_APPROX_SIMPLE)
     print("Number of detected contours:", len(cnts))
@@ -54,17 +53,19 @@ def score_assessment_form(file_string, wThresh, hThresh):
     for c in cnts:
         (x, y, w, h) = cv2.boundingRect(c)
         aspect_ratio = w / float(h)
-        if w >= 50 and h >= 50 and aspect_ratio >= 0.95 and aspect_ratio <= 1.05:
+        if (aspect_ratio < 0.95) | (aspect_ratio > 1.05):
+            print("weird aspect ratio, w={} and h={}".format(w, h))
+        if w >= 30 and h >= 30:  # and aspect_ratio >= 0.95 and aspect_ratio <= 1.05:
             questionCnts.append(c)
+
     questionCnts = contours.sort_contours(
         questionCnts, method="top-to-bottom")[0]
     print("Number of question-related contours:", len(questionCnts))
 
-    cv2.drawContours(scoring_region, questionCnts, -1, BLUE, 6)
-    cv2.imshow('black and white with overlayed contours', cv2.resize(
-        scoring_region, None, fx=.15, fy=.15))
+    cv2.drawContours(region, questionCnts, -1, BLUE, 6)
+    cv2.imshow('black and white with overlayed contours', region)
     # cv2.imwrite('detected_contours.png', scoring_region)
-    cv2.waitKey(0)
+    # cv2.waitKey(0)
 
     for (q, i) in enumerate(np.arange(0, len(questionCnts), NUM_ANSWER_OPTIONS)):
         cnts = contours.sort_contours(
@@ -82,13 +83,12 @@ def score_assessment_form(file_string, wThresh, hThresh):
                 bubbled = (total, j)
 
         answers[questionOffset+q+1] = (bubbled[1]+1)
-        cv2.drawContours(scoring_region, [cnts[bubbled[1]]], -1, RED, 5)
+        cv2.drawContours(region, [cnts[bubbled[1]]], -1, RED, 5)
         subtotal += (bubbled[1]+1)
 
     questionOffset = q+1
 
-    cv2.imshow("Scoring region", cv2.resize(
-        scoring_region, None, fx=0.15, fy=0.15))
+    cv2.imshow("Scoring region", region)
     # cv2.imwrite('detected_contours_scored.png', scoring_region)
     cv2.waitKey(0)
 
@@ -108,7 +108,11 @@ print("--start--")
 #     page_file = "special/temp/page_"+str(page_num)+".png"
 #     score_assessment_form(page_file, wThresh=0.7, hThresh=0.0)
 
-score_assessment_form("special/temp/page_1.png", wThresh=0.7, hThresh=0.0)
+
+page_file = 'special/temp/page_1-filled.png'  # 'images/pg1-blank.PNG'
+wThresh = 0.0  # 0.7
+hThresh = 0.0
+score_assessment_form(page_file, wThresh=0.0, hThresh=0.0)
 
 print("Raw Score:", subtotal)
 
