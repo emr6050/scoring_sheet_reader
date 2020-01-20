@@ -28,8 +28,7 @@ def detect_and_draw_circles(img_file, wThresh, hThresh):
     gray = cv2.cvtColor(region, cv2.COLOR_BGR2GRAY)
     bwImg = cv2.threshold(
         gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-    cv2.imshow('black and white image', cv2.resize(
-        bwImg, None, fx=.5, fy=.5))
+    cv2.imshow('black & white image', cv2.resize(bwImg, None, fx=.5, fy=.5))
     # cv2.imwrite('bwImg_region.png', bwImg)
     cv2.waitKey(0)
 
@@ -48,8 +47,7 @@ def detect_and_draw_circles(img_file, wThresh, hThresh):
         # draw the center of the circle
         # cv2.circle(region, (i[0], i[1]), 2, RED, 3)
 
-    cv2.imshow('detected circles', cv2.resize(
-        region, None, fx=.45, fy=.45))
+    cv2.imshow('detected circles', cv2.resize(region, None, fx=.5, fy=.5))
     # cv2.imwrite('images/pg2-filled-detected.png', region)
     cv2.waitKey(0)
 
