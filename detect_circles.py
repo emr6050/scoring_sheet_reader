@@ -51,6 +51,8 @@ def detect_and_draw_circles(img_file, wThresh, hThresh):
     # cv2.imwrite('images/pg2-filled-detected.png', region)
     cv2.waitKey(0)
 
+    # TODO: check if circle is filled in
+
 
 # pdf_file = "special/assessment-filled.pdf"
 # pages = convert_from_path(pdf_file)
@@ -60,7 +62,6 @@ def detect_and_draw_circles(img_file, wThresh, hThresh):
 #     page_file = "special/temp/page_"+str(count)+"-filled.png"
 #     page.save(page_file, "PNG")
 #     count = count+1
-
 # read in image
 wThresh = 0.0  # 0.7
 hThresh = 0.0
