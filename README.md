@@ -12,8 +12,8 @@ Optical Mark Recognition (OMR) program to read the numerical scores entered in a
 - [x] Reviews a defined region of a scanned scoring sheet for filled-in bubbles
 - [x] Stores the responses as a key-value pair (dict)
 - [x] Prints the final/total score
+- [x] Loop through pages of a PDF
 - [ ] Creates a FHIR-JSON object
-- [ ] Loop through pages of a PDF
 - [ ] Programmatically find scoring region 
 - [ ] Configuration files for defining default settings for various assessment sheets
 - [ ] Reads written narrative text
