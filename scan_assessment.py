@@ -1,9 +1,5 @@
 # Optical Mark Recognition (OMR) for reading the assessment scoring forms
 # created by: Peter Dobbs
-# based on: https://www.pyimagesearch.com/2016/10/03/bubble-sheet-multiple-choice-scanner-and-test-grader-using-omr-python-and-opencv/
-# TODO: check that question without an answer does not mess up the program
-# TODO: check if contour has more pixels than should be possible
-#           <- if the detected object is just too big to be one of the bubble answers
 
 from imutils.perspective import four_point_transform
 from imutils import contours
@@ -17,6 +13,8 @@ from pdf2image import convert_from_path
 RED = (0, 0, 255)
 BLUE = (255, 0, 0)
 NUM_ANSWER_OPTIONS = 4
+W_THRESH = 0.0
+H_THRESH = 0.0
 
 # variables
 subtotal = 0
@@ -24,7 +22,7 @@ questionOffset = 0  # useful for multi-page questionaire
 answers = {}
 
 
-def score_assessment_form(file_string, wThresh, hThresh):
+def score_assessment_form(file_string, page_num, wThresh, hThresh):
     global questionOffset, subtotal, answers
     file_img = cv2.imread(file_string)
 
@@ -53,7 +51,7 @@ def score_assessment_form(file_string, wThresh, hThresh):
     for c in cnts:
         (x, y, w, h) = cv2.boundingRect(c)
         aspect_ratio = w / float(h)
-        if w >= 30 and h >= 30 and aspect_ratio >= 0.80 and aspect_ratio <= 1.1:
+        if w >= 30 and h >= 30 and aspect_ratio >= 0.80 and aspect_ratio <= 1.2:
             questionCnts.append(c)
 
     questionCnts = contours.sort_contours(
@@ -62,7 +60,7 @@ def score_assessment_form(file_string, wThresh, hThresh):
 
     cv2.drawContours(region, questionCnts, -1, BLUE, 6)
     cv2.imshow('black and white with overlayed contours', region)
-    # cv2.imwrite('detected_contours.png', scoring_region)
+    # cv2.imwrite('detected_contours.png', region)
     # cv2.waitKey(0)
 
     # arrange questions into groups
@@ -71,7 +69,8 @@ def score_assessment_form(file_string, wThresh, hThresh):
     # loop through answer groups
     for (q, i) in enumerate(questionGroups):
         bubbled = (0, 0)
-        
+        expectedBubbleFill = 0
+
         # order the answer group from left-to-right
         cnts = contours.sort_contours(
             questionCnts[i:i + NUM_ANSWER_OPTIONS])[0]
@@ -83,47 +82,49 @@ def score_assessment_form(file_string, wThresh, hThresh):
 
             mask = cv2.bitwise_and(bwImage, bwImage, mask=mask)
             total = cv2.countNonZero(mask)
-            print('nonzero values in {} = {}'.format(j, total))
+            expectedBubbleFill += total
 
             if bubbled == (0, 0) or total > bubbled[0]:
                 bubbled = (total, j)
 
-        if(bubbled[0] > 600):   # threshold for `filled-in bubble`
+        expectedBubbleFill /= NUM_ANSWER_OPTIONS
+
+        if(bubbled[0] > expectedBubbleFill*1.2):   # threshold for `filled-in bubble`
             answers[questionOffset+q+1] = (bubbled[1]+1)
             cv2.drawContours(region, [cnts[bubbled[1]]], -1, RED, 5)
             subtotal += (bubbled[1]+1)
         else:
+            print('Missing answer detected at question ', questionOffset+q+1)
             answers[questionOffset+q+1] = None
 
     questionOffset = q+1
 
     cv2.imshow("Scoring region", region)
-    # cv2.imwrite('detected_contours_scored.png', scoring_region)
-    cv2.waitKey(0)
+    cv2.imwrite(
+        'temp/detected_contours_scored{}.png'.format(page_num), region)
+    # cv2.waitKey(0)
 
 
 print("--start--")
+print("--PRESETS--")
+print('')
 
-# pdf_file = "special/SRS-P.pdf"
-# pages = convert_from_path(pdf_file)
-# count = 0
+pdf_file = "assessment-filled.pdf"
+pages = convert_from_path(pdf_file)
+count = 0
 
-# for page in pages:
-#     page_file = "special/temp/page_"+str(count)+".png"
-#     page.save(page_file, "PNG")
-#     count = count+1
+for page in pages:
+    page_file = "temp/pg"+str(count)+".png"
+    page.save(page_file, "PNG")
+    count = count+1
 
-# for page_num in range(count):
-#     page_file = "special/temp/page_"+str(page_num)+".png"
-#     score_assessment_form(page_file, wThresh=0.7, hThresh=0.0)
+for page_num in range(count):
+    page_file = "temp/pg"+str(page_num)+".png"
+    score_assessment_form(page_file, page_num, wThresh=W_THRESH, hThresh=H_THRESH)
 
-
-page_file = 'special/temp/page_2-filled.png'  # 'images/pg1-blank.PNG'
-wThresh = 0.0  # 0.7
-hThresh = 0.0
-score_assessment_form(page_file, wThresh=0.0, hThresh=0.0)
 
 print("Raw Score:", subtotal)
+
 
 # creating FHIR resource for patient record
 # org = new Organization()
