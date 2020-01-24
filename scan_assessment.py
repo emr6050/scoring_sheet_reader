@@ -8,6 +8,11 @@ import argparse
 import imutils
 import cv2
 from pdf2image import convert_from_path
+from fhir.resources.patient import Patient
+from fhir.resources.humanname import HumanName
+from fhir.resources.encounter import Encounter
+from fhir.resources.documentreference import DocumentReference
+from fhir.resources.observation import Observation
 
 # constants
 RED = (0, 0, 255)
@@ -109,25 +114,44 @@ print("--start--")
 print("--PRESETS--")
 print('')
 
-pdf_file = "assessment-filled.pdf"
-pages = convert_from_path(pdf_file)
-count = 0
+# pdf_file = "assessment-filled.pdf"
+# pages = convert_from_path(pdf_file)
+# count = 0
 
-for page in pages:
-    page_file = "temp/pg"+str(count)+".png"
-    page.save(page_file, "PNG")
-    count = count+1
+# for page in pages:
+#     page_file = "temp/pg"+str(count)+".png"
+#     page.save(page_file, "PNG")
+#     count = count+1
 
-for page_num in range(count):
-    page_file = "temp/pg"+str(page_num)+".png"
-    score_assessment_form(page_file, page_num, wThresh=W_THRESH, hThresh=H_THRESH)
+# for page_num in range(count):
+#     page_file = "temp/pg"+str(page_num)+".png"
+#     score_assessment_form(page_file, page_num,
+#                           wThresh=W_THRESH, hThresh=H_THRESH)
 
-
-print("Raw Score:", subtotal)
+# print("Raw Score:", subtotal)
 
 
 # creating FHIR resource for patient record
-# org = new Organization()
+pat = Patient({
+    "id": "1",
+    "name": [
+        {
+            "given": ["John"],
+            "family": "Doe"
+        }
+    ],
+    "birthDate": "2019-01-24"
+})
+print(pat)
+
+enc = Encounter()
+enc.subject = pat
+
+docref_json = {
+    "resourceType": "DocumentReference",
+}
+doc = DocumentReference()
+obs = Observation()
 
 
 print("--finish--")
