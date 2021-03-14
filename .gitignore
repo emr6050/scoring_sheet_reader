@@ -1,3 +1,7 @@
 
 .vscode/*
 special/*
+
+# ignore all questionnaires except for PHQ-9
+questionnaires/*
+!questionnaires/phq-9-questionnaire.json
